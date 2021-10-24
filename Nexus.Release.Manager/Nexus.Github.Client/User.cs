@@ -22,7 +22,7 @@ namespace Nexus.Github.Client
         public string Location { get; set; }
         public string Company { get; set; }
         public string TwitterUsername { get; set; }
-        private User(UserResponse user)
+        internal User(UserResponse user)
         {
             Login = user.Login;
             Name = user.Name;

@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31815.197
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nexus.Github.Client", "Nexus.Github.Client\Nexus.Github.Client.csproj", "{C8A7A627-0836-4C5D-AD17-2D11A2452872}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nexus.Release.Manager", "Nexus.Release.Manager\Nexus.Release.Manager.csproj", "{A2AEEDCF-7C98-4FDE-81C7-18D8DD4417BE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nexus.Releases.Manager", "Nexus.Release.Manager\Nexus.Releases.Manager.csproj", "{A2AEEDCF-7C98-4FDE-81C7-18D8DD4417BE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
