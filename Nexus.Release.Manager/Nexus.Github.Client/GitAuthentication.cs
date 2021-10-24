@@ -1,29 +1,51 @@
 ﻿using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Web;
+using Newtonsoft.Json;
 
 namespace Nexus.Github.Client;
-public class OAuth
+
+public class GitAuthentication
 {
     public string ClientId { get; set; }
     public string ClientSecret { get; set; }
+    internal string baseApiUrl => "https://api.github.com/";
+    internal HttpRequestMessage AuthenticatedMessage
+    {
+        get
+        {
+            HttpRequestMessage requestMessage = new();
+            requestMessage.Headers.Authorization = new("token", ClientToken);
+            requestMessage.Headers.Add("User-Agent", UserAgent);
+            return requestMessage;
+        }
+    }
     private readonly string requestUrl;
     private const string htmlClose = "<!DOCTYPE html><html><head></head><body onload=\"window.close()\">You can now close this page!</body></html>";
     public string UserCode { get; set; }
-    public OAuth(string clientId, string clientSecret)
+    internal string ClientToken { get; set; }
+    public string UserAgent { get; set; }
+    public GitAuthentication(string userAgent, string clientId, string clientSecret)
     {
         ClientId = clientId;
         ClientSecret = clientSecret;
+        UserAgent = userAgent;
 
         requestUrl = $"https://github.com/login/oauth/authorize?client_id={ClientId}";
     }
 
     public async Task RequestLoginAsync(TimeSpan maxAwait)
     {
+        HttpClient httpClient = new();
+        HttpRequestMessage requestMessage;
+        string responseString = string.Empty;
+        AccesTokenResponse tokenResponse = null;
+
         Task awaitResponse = Task.Run(() =>
         {
-            AwaitResponse("http://localhost:1337/", htmlClose);
+            AwaitGetCode("http://localhost:1337/", htmlClose);
         });
 
         ProcessStartInfo info = new(requestUrl);
@@ -31,9 +53,21 @@ public class OAuth
 
         Process.Start(info);
         await awaitResponse.WaitAsync(maxAwait);
+
+        string getAcessTokenUrl = $"https://github.com/login/oauth/access_token?client_id={ClientId}&client_secret={ClientSecret}&code={UserCode}";
+        requestMessage = new(HttpMethod.Post, getAcessTokenUrl);
+        requestMessage.Headers.Add("Accept", "application/json");
+        HttpResponseMessage response = await httpClient.SendAsync(requestMessage);
+
+        if (response.StatusCode != HttpStatusCode.OK)
+            throw new ArgumentException("User Invalid Authentication");
+
+        responseString = await response.Content.ReadAsStringAsync();
+        tokenResponse = JsonConvert.DeserializeObject<AccesTokenResponse>(responseString);
+        ClientToken = tokenResponse.access_token;
     }
 
-    private void AwaitResponse(string prefix, string serverResponse)
+    private void AwaitGetCode(string prefix, string serverResponse)
     {
         bool authenticated = false;
         HttpListener listener = new();
@@ -77,5 +111,12 @@ public class OAuth
         }
 
         listener.Stop();
+    }
+
+    private class AccesTokenResponse
+    {
+        public string access_token { get; set; }
+        public string token_type { get; set; }
+        public string scope { get; set; }
     }
 }
